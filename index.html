@@ -215,9 +215,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 .fpbtn-n{font-family:var(--fd);font-size:.9rem;letter-spacing:1px;display:block;}
 .fpbtn-d{font-size:.65rem;color:var(--txm);font-family:var(--fm);}
 .ppicker{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;}
-.ppbtn{padding:8px 9px;border-radius:8px;background:var(--bg3);border:1px solid var(--bd);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:500;}
-.ppbtn.sel{background:rgba(45,122,58,.1);border-color:rgba(45,122,58,.3);}
-.ppbtn.opp{background:rgba(196,98,45,.08);border-color:rgba(196,98,45,.25);color:var(--cll);}
+.ppbtn{padding:8px 9px;border-radius:8px;background:var(--bg3);border:1px solid var(--bd);cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:500;position:relative;}
+.ppbtn.sel{background:rgba(45,122,58,.18);border-color:var(--gl);color:var(--tx);box-shadow:0 0 0 2px rgba(45,122,58,.25);font-weight:700;}
+.ppbtn.sel .ppav{background:var(--gl);color:#fff;}
+.ppbtn.sel::after{content:'✓';position:absolute;top:4px;right:5px;font-size:.58rem;color:var(--gl);font-weight:700;}
+.ppbtn.opp{background:rgba(196,98,45,.12);border-color:var(--clay);color:var(--cll);box-shadow:0 0 0 2px rgba(196,98,45,.2);font-weight:700;}
+.ppbtn.opp .ppav{background:var(--clay);color:#fff;}
+.ppbtn.opp::after{content:'✓';position:absolute;top:4px;right:5px;font-size:.58rem;color:var(--cll);font-weight:700;}
 .ppav{width:26px;height:26px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;flex-shrink:0;}
 .sc-block{background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:12px 14px;margin-bottom:12px;}
 .sc-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
@@ -547,6 +551,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
       <!-- step 2: players + score + predictor -->
       <div class="flow" id="fl2">
         <div class="steps"><div class="sdot done"></div><div class="sdot cur"></div><div class="sdot"></div></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <button onclick="gotoFlow(1)" style="background:none;border:none;cursor:pointer;color:var(--txm);font-size:.78rem;font-family:var(--fb);padding:2px 0;display:flex;align-items:center;gap:4px;transition:color .2s" onmouseover="this.style.color='var(--tx)'" onmouseout="this.style.color='var(--txm)'">← Cambiar formato</button>
+        </div>
         <div class="ftitle" id="fl2-title">Jugadores</div>
         <div class="fsub" id="fl2-sub">Seleccioná los jugadores</div>
         <div class="ppicker" id="ppicker"></div>
