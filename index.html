@@ -694,8 +694,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
       <div class="ftitle">Panel Admin</div>
       <div class="fsub" id="admin-user-label">Autenticado como administrador</div>
       <!-- admin tabs -->
-      <div style="display:flex;gap:6px;margin-bottom:18px" id="admin-tabs">
+      <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap" id="admin-tabs">
         <button class="admin-tab on" onclick="adminTab('pending',this)">Solicitudes<span id="tab-pending-count"></span></button>
+        <button class="admin-tab" onclick="adminTab('results',this)">Resultados<span id="tab-results-count"></span></button>
         <button class="admin-tab" onclick="adminTab('players',this)">Jugadores</button>
       </div>
       <div id="admin-content"></div>
@@ -1505,15 +1506,81 @@ async function checkAdminPin(){
 
 // ── ADMIN MODAL ───────────────────────────────────────────
 function showAdminModal(){
-  document.getElementById('admin-user-label').textContent='Administrador autenticado · '+( season?.label||'');
-  adminTab('pending',document.querySelector('#admin-tabs .admin-tab'));
+  document.getElementById('admin-user-label').textContent='Administrador autenticado · '+(season?.label||'');
+  const pendBtn=document.querySelector('#admin-tabs .admin-tab');
+  adminTab('pending',pendBtn);
+  // init results badge
+  const cnt=document.getElementById('tab-results-count');
+  if(cnt){const n=matches.filter(m=>m.status==='pending').length;cnt.textContent=n?` (${n})`:'';}
   document.getElementById('admin-ov').classList.add('on');
 }
 function adminTab(tab,el){
   document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
   if(tab==='pending') renderAdminPending();
+  else if(tab==='results') renderAdminResults();
   else renderAdminPlayers();
+}
+
+function renderAdminResults(){
+  const el=document.getElementById('admin-content');
+  const pend=matches.filter(m=>m.status==='pending');
+  const cnt=document.getElementById('tab-results-count');
+  if(cnt) cnt.textContent=pend.length?` (${pend.length})`:'';
+  if(!pend.length){
+    el.innerHTML='<div class="empty"><div class="emptyi">✅</div><div class="emptyt">No hay resultados pendientes</div></div>';
+    return;
+  }
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${pend.map(m=>{
+    const fmt=FMT_MAP[m.format];
+    let desc='';
+    if(!m.is_doubles&&m.player1_id&&m.player2_id){
+      const p1=players.find(p=>p.id===m.player1_id);
+      const p2=players.find(p=>p.id===m.player2_id);
+      const w=players.find(p=>p.id===m.winner_id);
+      desc=`<strong>${p1?.name.split(' ')[0]||'?'}</strong> ${m.score1}–${m.score2} <strong>${p2?.name.split(' ')[0]||'?'}</strong> · ganó <span style="color:var(--acc)">${w?.name.split(' ')[0]||'?'}</span>`;
+    } else if(m.is_doubles){
+      const n=(id)=>players.find(p=>p.id===id)?.name.split(' ')[0]||'?';
+      desc=`Dobles: ${n(m.team1_p1)}/${n(m.team1_p2)} ${m.score1}–${m.score2} ${n(m.team2_p1)}/${n(m.team2_p2)}`;
+    } else {
+      desc=`${fmt?.name||m.format}`;
+    }
+    return `<div style="background:var(--bg2);border:1px solid rgba(249,115,22,.25);border-radius:11px;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.82rem;line-height:1.4">${desc}</div>
+        <div style="font-size:.63rem;font-family:var(--fm);color:var(--txd);margin-top:3px">${fmt?.name||m.format} · ${timeAgo(m.created_at)}</div>
+      </div>
+      <button onclick="adminConfirmMatch('${m.id}')" style="flex-shrink:0;padding:6px 13px;border-radius:7px;background:rgba(0,209,122,.1);border:1px solid rgba(0,209,122,.3);color:var(--acc);font-size:.74rem;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .2s" onmouseover="this.style.background='rgba(0,209,122,.2)'" onmouseout="this.style.background='rgba(0,209,122,.1)'">✓ Confirmar</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function adminConfirmMatch(mid){
+  const m=matches.find(x=>x.id===mid);
+  if(!m) return;
+  if(DEMO_MODE){
+    const idx=matches.findIndex(x=>x.id===mid);
+    if(idx!==-1) matches[idx]={...matches[idx],status:'confirmed',confirmed_by:'admin'};
+    toast('✓','Resultado confirmado por admin');
+    renderAdminResults();
+    loadHome();
+    return;
+  }
+  // confirmar via RPC con hash de admin
+  const{data,error}=await db.rpc('admin_confirm_match',{match_id:mid,admin_hash:adminHashCache});
+  if(error||data===false){toast('❌',error?.message||'Error al confirmar');return;}
+  // actualizar puntos
+  const pts=m.pts_awarded||{};
+  for(const [pid,delta] of Object.entries(pts)){
+    const p=players.find(x=>x.id===pid);
+    if(!p) continue;
+    const isW=m.winner_id===pid||(m.is_doubles&&((m.winner_team===1&&[m.team1_p1,m.team1_p2].includes(pid))||(m.winner_team===2&&[m.team2_p1,m.team2_p2].includes(pid))));
+    await db.from('players').update({points:p.points+delta,played:p.played+1,won:p.won+(isW?1:0),lost:p.lost+(isW?0:1)}).eq('id',pid);
+  }
+  toast('✓','Resultado confirmado por admin');
+  await reloadAll();
+  renderAdminResults();
+  loadHome();
 }
 
 function renderAdminPending(){
