@@ -364,6 +364,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 /* Hero spill — solo mobile+tablet */
 @media(min-width:1024px){#hero-spill{display:none!important;}}
 
+/* Ocultar bottom nav y more-sheet en tablet/desktop */
+@media(min-width:768px){
+  .bnav{display:none!important;}
+  .more-sheet{display:none!important;}
+  .more-sheet-bg{display:none!important;}
+  .page{padding-bottom:0!important;}
+}
 /* Tablet portrait · 768–1023 */
 @media(min-width:768px) and (max-width:1023px){
   .wrap{padding:0 1.25rem;}
