@@ -1136,9 +1136,9 @@ function openMatchDetail(mid){
       </div>`;
     }).join('');
 
-  } else if(m.format==='d21'&&m.is_team){
-    const tA=(m.team_a||[m.player1_id,m.player2_id].filter(Boolean));
-    const tB=(m.team_b||[m.player3_id,m.player4_id].filter(Boolean));
+  } else if(m.format==='d21'&&m.winner_team){
+    const tA=(m.pts_awarded?._tA||[m.player1_id,m.player2_id].filter(Boolean));
+    const tB=(m.pts_awarded?._tB||[m.player3_id,m.player4_id].filter(Boolean));
     const plsA=tA.map(id=>players.find(p=>p.id===id)).filter(Boolean);
     const plsB=tB.map(id=>players.find(p=>p.id===id)).filter(Boolean);
     const wA=m.winner_team===1;
@@ -1278,9 +1278,9 @@ function matchCard(m,showCfm=false){
     </div>`;
   }
   // d21 por equipos
-  if(m.format==='d21'&&m.is_team){
-    const tA=(m.team_a||[m.player1_id,m.player2_id].filter(Boolean));
-    const tB=(m.team_b||[m.player3_id,m.player4_id].filter(Boolean));
+  if(m.format==='d21'&&m.winner_team){
+    const tA=(m.pts_awarded?._tA||[m.player1_id,m.player2_id].filter(Boolean));
+    const tB=(m.pts_awarded?._tB||[m.player3_id,m.player4_id].filter(Boolean));
     const plsA=tA.map(id=>players.find(p=>p.id===id)).filter(Boolean);
     const plsB=tB.map(id=>players.find(p=>p.id===id)).filter(Boolean);
     const wA=m.winner_team===1;
@@ -1684,7 +1684,9 @@ async function doConfirm(){
   for(const [pid,delta] of Object.entries(pts)){
     const p=players.find(x=>x.id===pid);
     if(!p)continue;
-    const isW=m.winner_id===pid||(m.is_doubles&&((m.winner_team===1&&[m.team1_p1,m.team1_p2].includes(pid))||(m.winner_team===2&&[m.team2_p1,m.team2_p2].includes(pid))));
+    const tAd=(m.pts_awarded?._tA||[]);const tBd=(m.pts_awarded?._tB||[]);
+    const isW=m.winner_id===pid||(m.is_doubles&&((m.winner_team===1&&[m.team1_p1,m.team1_p2].includes(pid))||(m.winner_team===2&&[m.team2_p1,m.team2_p2].includes(pid))))
+      ||(m.format==='d21'&&m.winner_team&&((m.winner_team===1&&tAd.includes(pid))||(m.winner_team===2&&tBd.includes(pid))));
     await db.from('players').update({points:p.points+delta,played:p.played+1,won:p.won+(isW?1:0),lost:p.lost+(isW?0:1)}).eq('id',pid);
   }
   toast('✓','Resultado confirmado — puntos actualizados');
@@ -1710,16 +1712,15 @@ async function saveResult(submitterId){
     const sB=+document.getElementById('sc-d21-B').value;
     const wtA=sA>sB;
     const {teamA,teamB}=SS;
-    const ptWin=10,ptLose=3; // puntos por jugador d21 por equipo
+    const ptWin=10,ptLose=3;
     teamA.forEach(id=>pts[id]=wtA?ptWin:ptLose);
     teamB.forEach(id=>pts[id]=!wtA?ptWin:ptLose);
-    // guardamos equipo A en team1_* y equipo B en team2_*
+    // equipos guardados dentro de pts_awarded para no requerir columnas extra
+    pts['_tA']=teamA;
+    pts['_tB']=teamB;
     payload={...payload,
-      is_doubles:false,is_team:true,
-      team_a:teamA,team_b:teamB,
       score1:sA,score2:sB,
       winner_team:wtA?1:2,
-      // compat: p1..p4 para vista de partidos (primeros de cada equipo)
       player1_id:teamA[0]||null,player2_id:teamA[1]||null,
       player3_id:teamB[0]||null,player4_id:teamB[1]||null,
       winner_id:wtA?teamA[0]:teamB[0],
@@ -1901,7 +1902,9 @@ async function adminConfirmMatch(mid){
   for(const [pid,delta] of Object.entries(pts)){
     const p=players.find(x=>x.id===pid);
     if(!p) continue;
-    const isW=m.winner_id===pid||(m.is_doubles&&((m.winner_team===1&&[m.team1_p1,m.team1_p2].includes(pid))||(m.winner_team===2&&[m.team2_p1,m.team2_p2].includes(pid))));
+    const tAd=(m.pts_awarded?._tA||[]);const tBd=(m.pts_awarded?._tB||[]);
+    const isW=m.winner_id===pid||(m.is_doubles&&((m.winner_team===1&&[m.team1_p1,m.team1_p2].includes(pid))||(m.winner_team===2&&[m.team2_p1,m.team2_p2].includes(pid))))
+      ||(m.format==='d21'&&m.winner_team&&((m.winner_team===1&&tAd.includes(pid))||(m.winner_team===2&&tBd.includes(pid))));
     await db.from('players').update({points:p.points+delta,played:p.played+1,won:p.won+(isW?1:0),lost:p.lost+(isW?0:1)}).eq('id',pid);
   }
   toast('✓','Resultado confirmado por admin');
