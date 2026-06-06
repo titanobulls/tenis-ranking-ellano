@@ -567,6 +567,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
       <div style="background:rgba(201,144,10,.05);border:1px solid rgba(201,144,10,.12);border-radius:11px;padding:11px 15px;margin-bottom:17px;font-size:.78rem;color:var(--txm);line-height:1.5">🏆 Se entregan al cierre de cada semestre. Liderazgo actualizado en tiempo real.</div>
       <div class="awards-grid" id="awards-grid"></div>
     </div>
+    <div class="sec">
+      <div class="sec-hd"><div class="sec-title">Logros Desbloqueados</div></div>
+      <div id="badges-global-grid" class="badges-grid"></div>
+    </div>
   </div>
 </div>
 
@@ -1368,6 +1372,23 @@ function loadAwards(){
   document.getElementById('awards-grid').innerHTML=AWARDS.map(a=>{
     const l=a.fn();
     return `<div class="acard"><div class="aw-i">${a.icon}</div><div class="aw-n">${a.name}</div><div class="aw-d">${a.desc}</div><div class="aw-l">${l?`${l.initials} · <strong>${l.name.split(' ')[0]}</strong>${l._e?`<br><span style="font-size:.68rem;color:var(--txm)">${l._e}</span>`:''}` :'<span style="color:var(--txm)">Sin datos</span>'}</div></div>`;
+  }).join('');
+
+  // grilla global de logros
+  const el=document.getElementById('badges-global-grid');
+  if(!el) return;
+  el.innerHTML=BADGES.map(b=>{
+    const earners=players.filter(p=>b.check(p,conf,players,sessions));
+    const earned=earners.length>0;
+    const earnersHtml=earners.length
+      ? earners.map(p=>`<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg4);border-radius:100px;padding:1px 7px;font-size:.62rem;font-family:var(--fm);cursor:pointer" onclick="closeOverlay('');openProfile('${p.id}')">${p.initials}</span>`).join('')
+      : `<span style="font-size:.62rem;color:var(--txd);font-family:var(--fm)">Nadie aún</span>`;
+    return `<div class="badge-card ${earned?'earned':''}" style="cursor:default">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-desc">${b.desc}</div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center">${earnersHtml}</div>
+    </div>`;
   }).join('');
 }
 
