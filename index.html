@@ -287,6 +287,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 .aw-n{font-family:var(--fd);font-size:.92rem;letter-spacing:1px;margin-bottom:3px;}
 .aw-d{font-size:.7rem;color:var(--txm);line-height:1.4;margin-bottom:9px;}
 .aw-l{font-size:.78rem;font-weight:600;}
+/* ── EDIT PROFILE ────────────────────────────────────────── */
+.edit-field{margin-bottom:13px;}
+.edit-label{font-size:.63rem;font-family:var(--fm);color:var(--txm);text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:4px;}
+.edit-in{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:8px 11px;color:var(--tx);font-size:.84rem;font-family:var(--fb);outline:none;transition:border-color .2s;}
+.edit-in:focus{border-color:var(--gl);}
+.edit-in-short{max-width:80px;text-transform:uppercase;}
+.edit-pin-row{display:flex;gap:5px;margin-bottom:13px;}
+.edit-pin-key{flex:1;padding:10px 4px;border-radius:8px;background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--fb);text-align:center;}
+.edit-pin-key:hover{background:var(--bg4);}
+.edit-pin-key:active{transform:scale(.92);}
+.edit-pin-key.ok{background:var(--green);border-color:var(--green);color:#fff;}
 /* ── PENDING PLAYERS ─────────────────────────────────────── */
 .pending-player-card{background:var(--bg2);border:1px solid rgba(249,115,22,.25);border-radius:11px;padding:14px 16px;display:flex;align-items:center;gap:14px;}
 .ppc-av{width:42px;height:42px;border-radius:50%;background:rgba(249,115,22,.1);border:2px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:700;color:var(--warn);flex-shrink:0;}
@@ -616,6 +627,40 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
   </div>
 </div>
 
+<!-- EDIT PROFILE MODAL -->
+<div class="overlay" id="edit-prof-ov">
+  <div class="modal">
+    <button class="mcl" onclick="closeOverlay('edit-prof-ov')">✕</button>
+    <div class="modal-body">
+      <div class="ftitle">Editar Perfil</div>
+      <div class="fsub">Ingresá tu PIN para guardar los cambios.</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:4px">
+        <div class="edit-field" style="margin-bottom:0">
+          <label class="edit-label">Nombre o apodo</label>
+          <input id="ep-name" type="text" class="edit-in" placeholder="Tu nombre">
+        </div>
+        <div class="edit-field" style="margin-bottom:0">
+          <label class="edit-label">Iniciales</label>
+          <input id="ep-initials" type="text" maxlength="2" class="edit-in edit-in-short" placeholder="TN">
+        </div>
+      </div>
+      <div style="font-size:.68rem;font-family:var(--fm);color:var(--txm);margin-bottom:16px;margin-top:6px">Las iniciales aparecen en el avatar del ranking.</div>
+
+      <div style="font-size:.63rem;font-family:var(--fm);color:var(--txm);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Tu PIN (4 dígitos)</div>
+      <div class="pdots" id="ep-dots" style="margin-bottom:14px">
+        <div class="pdot" id="ep1"></div><div class="pdot" id="ep2"></div><div class="pdot" id="ep3"></div><div class="pdot" id="ep4"></div>
+      </div>
+      <div class="pkeys" style="max-width:100%;margin-bottom:4px">
+        <button class="pkey" onclick="epKey('1')">1</button><button class="pkey" onclick="epKey('2')">2</button><button class="pkey" onclick="epKey('3')">3</button>
+        <button class="pkey" onclick="epKey('4')">4</button><button class="pkey" onclick="epKey('5')">5</button><button class="pkey" onclick="epKey('6')">6</button>
+        <button class="pkey" onclick="epKey('7')">7</button><button class="pkey" onclick="epKey('8')">8</button><button class="pkey" onclick="epKey('9')">9</button>
+        <button class="pkey" onclick="epKey('back')">⌫</button><button class="pkey" onclick="epKey('0')">0</button><button class="pkey ok" onclick="epKey('ok')">OK</button>
+      </div>
+      <div class="perr" id="ep-err"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ADMIN PANEL MODAL -->
 <div class="overlay" id="admin-ov">
   <div class="modal" style="max-width:580px">
@@ -728,7 +773,8 @@ async function sha256hex(str){
 let db, players=[], sessions=[], matches=[], season=null;
 let pendingPlayers=[];  // jugadores con active=false pendientes de aprobación
 let SS = {fmt:null,selIds:[],confirmMid:null};
-let spBuf='', cpBuf='', apBuf='';
+let spBuf='', cpBuf='', apBuf='', epBuf='';
+let epPid='';
 let adminAuthed=false;
 let adminHashCache='';
 
@@ -1098,6 +1144,9 @@ function openProfile(pid){
       <div style="font-size:.64rem;font-family:var(--fm);color:var(--txm);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">Logros (${BADGES.filter(b=>b.check(p,conf,players,sessions)).length}/${BADGES.length})</div>
       <div class="badges-grid" style="margin-bottom:18px">${badgesHtml}</div>
       ${top3rivals.length?`<div style="font-size:.64rem;font-family:var(--fm);color:var(--txm);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">Rivalidades</div><div style="display:flex;flex-direction:column;gap:7px">${rivalHtml}</div>`:''}
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--bd)">
+        <button class="btn btn-o btn-sm" onclick="openEditProfile('${pid}')">✏️ Editar perfil</button>
+      </div>
     </div>`;
   document.getElementById('prof-ov').classList.add('on');
 }
@@ -1541,6 +1590,60 @@ function openRegModal(){
   document.getElementById('reg-i').value='';
   document.getElementById('reg-wa').value='';
   document.getElementById('reg-ov').classList.add('on');
+}
+
+// ── EDIT PROFILE ─────────────────────────────────────────
+function openEditProfile(pid){
+  const p=players.find(x=>x.id===pid);
+  if(!p)return;
+  epPid=pid;
+  epBuf='';
+  document.getElementById('ep-name').value=p.name;
+  document.getElementById('ep-initials').value=p.initials;
+  updEpDots();
+  document.getElementById('ep-err').textContent='';
+  closeOverlay('prof-ov');
+  document.getElementById('edit-prof-ov').classList.add('on');
+}
+function epKey(k){
+  if(k==='back') epBuf=epBuf.slice(0,-1);
+  else if(k==='ok'){saveProfileEdit();return;}
+  else if(epBuf.length<4) epBuf+=k;
+  updEpDots();
+  if(epBuf.length===4) saveProfileEdit();
+}
+function updEpDots(){for(let i=1;i<=4;i++)document.getElementById('ep'+i).classList.toggle('on',i<=epBuf.length);}
+async function saveProfileEdit(){
+  const name=document.getElementById('ep-name').value.trim();
+  const initials=document.getElementById('ep-initials').value.trim().toUpperCase().slice(0,2);
+  if(!name||!initials){showErr('ep-err','Completá nombre e iniciales');return;}
+  if(DEMO_MODE){
+    const p=players.find(x=>x.id===epPid);
+    if(!p)return;
+    if(epBuf!=='1234'){showErr('ep-err','PIN incorrecto (demo: 1234)');shakeEl('ep-dots');epBuf='';updEpDots();return;}
+    p.name=name; p.initials=initials;
+    toast('✓','Perfil actualizado');
+    closeOverlay('edit-prof-ov');
+    loadHome();
+    return;
+  }
+  const hash=await sha256hex(epBuf);
+  const{data,error}=await db.rpc('update_player_profile',{
+    p_id:epPid,
+    p_name:name,
+    p_initials:initials,
+    pin_hash:hash
+  });
+  if(error||data===false){
+    showErr('ep-err','PIN incorrecto');
+    shakeEl('ep-dots');
+    epBuf=''; updEpDots();
+    return;
+  }
+  await reloadAll();
+  toast('✓','Perfil actualizado');
+  closeOverlay('edit-prof-ov');
+  loadHome();
 }
 
 // init badge state
