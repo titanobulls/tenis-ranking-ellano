@@ -329,7 +329,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 /* More sheet */
 .more-sheet-bg{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);}
 .more-sheet-bg.on{display:block;}
-.more-sheet{position:fixed;bottom:62px;left:0;right:0;z-index:400;background:var(--bg2);border:1px solid var(--bd);border-radius:20px 20px 0 0;padding:14px 12px calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(4,1fr);gap:6px;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.56,.64,1);}
+.more-sheet{position:fixed;bottom:62px;left:0;right:0;z-index:400;background:var(--bg2);border:1px solid var(--bd);border-radius:20px 20px 0 0;padding:14px 12px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(4,1fr);gap:8px;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.56,.64,1);}
 .more-sheet.on{transform:translateY(0);}
 .mstab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;border-radius:12px;background:var(--bg3);border:1px solid var(--bd);cursor:pointer;color:var(--txm);font-family:var(--fb);transition:all .18s;-webkit-tap-highlight-color:transparent;}
 .mstab:active{transform:scale(.9);}
@@ -1718,9 +1718,6 @@ checkBadgeUnlocks();
 <!-- MORE SHEET (mobile) -->
 <div class="more-sheet-bg" id="more-sheet-bg" onclick="closeMoreSheet()"></div>
 <div class="more-sheet" id="more-sheet">
-  <button class="mstab" data-page="matches" onclick="navFromSheet('matches')">
-    <span class="mstab-i">🎾</span><span class="mstab-l">Partidos</span>
-  </button>
   <button class="mstab" data-page="formats" onclick="navFromSheet('formats')">
     <span class="mstab-i">📋</span><span class="mstab-l">Formatos</span>
   </button>
@@ -1730,8 +1727,8 @@ checkBadgeUnlocks();
   <button class="mstab" id="ms-admin-btn" onclick="adminFromSheet()">
     <span class="mstab-i">⚙️</span><span class="mstab-l">Admin<span id="bnav-admin-badge" style="display:none;color:var(--danger);font-size:.7em;vertical-align:top">●</span></span>
   </button>
-  <button class="mstab" onclick="themeFromSheet()" id="ms-theme-btn" style="grid-column:span 4">
-    <span class="mstab-i" id="bnav-tt-ic">🌙</span><span class="mstab-l">Cambiar Tema</span>
+  <button class="mstab" onclick="themeFromSheet()" id="ms-theme-btn">
+    <span class="mstab-i" id="bnav-tt-ic">🌙</span><span class="mstab-l">Tema</span>
   </button>
 </div>
 
