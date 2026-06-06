@@ -874,7 +874,7 @@ function nav(id,tab){
 
 function updateSpill(){
   if(!season){document.getElementById('spill').textContent='—';return;}
-  let txt=season.label;
+  let txt=season.label.split(' · ')[0];
   if(season.end_date){
     const d=new Date(season.end_date+'T12:00:00');
     const day=d.getDate();
