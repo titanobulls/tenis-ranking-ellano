@@ -1217,7 +1217,11 @@ function openMatchDetail(mid){
       </div>`;
   }
 
-  const cfmBtnModal=isPend?`<button class="btn btn-g" style="width:100%;margin-top:4px" onclick="closeOverlay('match-detail-ov');openConfirm('${m.id}')">✓ Confirmar resultado</button>`:'';
+  const cfmBtnModal=isPend?`
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-g" style="flex:1" onclick="closeOverlay('match-detail-ov');openConfirm('${m.id}')">✓ Confirmar resultado</button>
+      ${adminAuthed?`<button class="btn btn-o" style="color:var(--danger);border-color:rgba(239,68,68,.3)" onclick="closeOverlay('match-detail-ov');adminCancelMatch('${m.id}')">✕ Cancelar</button>`:''}
+    </div>`:'';
   const statusLine=isPend
     ?`<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.22);font-size:.78rem;color:var(--warn)">⏳ Pendiente de confirmación por los jugadores</div>`
     :`<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;background:rgba(0,209,122,.07);border:1px solid rgba(0,209,122,.2);font-size:.78rem;color:var(--acc)">✓ Resultado confirmado</div>`;
@@ -1872,7 +1876,10 @@ function renderAdminResults(){
         <div style="font-size:.82rem;line-height:1.4">${desc}</div>
         <div style="font-size:.63rem;font-family:var(--fm);color:var(--txd);margin-top:3px">${fmt?.name||m.format} · ${timeAgo(m.created_at)}</div>
       </div>
-      <button onclick="adminConfirmMatch('${m.id}')" style="flex-shrink:0;padding:6px 13px;border-radius:7px;background:rgba(0,209,122,.1);border:1px solid rgba(0,209,122,.3);color:var(--acc);font-size:.74rem;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .2s" onmouseover="this.style.background='rgba(0,209,122,.2)'" onmouseout="this.style.background='rgba(0,209,122,.1)'">✓ Confirmar</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="adminConfirmMatch('${m.id}')" style="padding:6px 13px;border-radius:7px;background:rgba(0,209,122,.1);border:1px solid rgba(0,209,122,.3);color:var(--acc);font-size:.74rem;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .2s" onmouseover="this.style.background='rgba(0,209,122,.2)'" onmouseout="this.style.background='rgba(0,209,122,.1)'">✓ Confirmar</button>
+        <button onclick="adminCancelMatch('${m.id}')" style="padding:6px 11px;border-radius:7px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--danger);font-size:.74rem;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background='rgba(239,68,68,.08)'">✕ Cancelar</button>
+      </div>
     </div>`;
   }).join('')}</div>`;
 }
@@ -1888,10 +1895,8 @@ async function adminConfirmMatch(mid){
     loadHome();
     return;
   }
-  // confirmar via RPC con hash de admin
   const{data,error}=await db.rpc('admin_confirm_match',{match_id:mid,admin_hash:adminHashCache});
   if(error||data===false){toast('❌',error?.message||'Error al confirmar');return;}
-  // actualizar puntos
   const pts=m.pts_awarded||{};
   for(const [pid,delta] of Object.entries(pts)){
     const p=players.find(x=>x.id===pid);
@@ -1900,6 +1905,23 @@ async function adminConfirmMatch(mid){
     await db.from('players').update({points:p.points+delta,played:p.played+1,won:p.won+(isW?1:0),lost:p.lost+(isW?0:1)}).eq('id',pid);
   }
   toast('✓','Resultado confirmado por admin');
+  await reloadAll();
+  renderAdminResults();
+  loadHome();
+}
+
+async function adminCancelMatch(mid){
+  if(!confirm('¿Cancelar este resultado? Se eliminará permanentemente.')) return;
+  if(DEMO_MODE){
+    matches=matches.filter(x=>x.id!==mid);
+    toast('🗑','Resultado cancelado');
+    renderAdminResults();
+    loadHome();
+    return;
+  }
+  const{error}=await db.from('matches').delete().eq('id',mid);
+  if(error){toast('❌',error.message);return;}
+  toast('🗑','Resultado cancelado');
   await reloadAll();
   renderAdminResults();
   loadHome();
