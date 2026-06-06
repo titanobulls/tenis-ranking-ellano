@@ -581,7 +581,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 // ── CONFIG ───────────────────────────────────────────────
 const SUPABASE_URL     = 'https://xodgstrwkqmojdfnsiyl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZGdzdHJ3a3Ftb2pkZm5zaXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MDE0NjEsImV4cCI6MjA5NjI3NzQ2MX0.QIErWCg5mwguxE6L2EGIf4cXtqgaOoL0eDOyYyW2kSI';
-const ADMIN_PIN        = '2030';
+// ADMIN_PIN eliminado — verificación ocurre server-side vía RPC
 const DEMO_MODE = SUPABASE_URL.includes('TU_PROYECTO');
 
 // ── POINTS ───────────────────────────────────────────────
@@ -641,12 +641,19 @@ const BADGES = [
     check:(p,m,all)=>{ let c=0; m.filter(x=>x.winner_id===p.id).forEach(x=>{ const wi=all.findIndex(a=>a.id===p.id); const rid=x.player1_id===p.id?x.player2_id:x.player1_id; const ri=all.findIndex(a=>a.id===rid); if(wi>ri&&ri>=0)c++; }); return c>=3; }},
 ];
 
+// ── SHA-256 (Web Crypto — nunca sale el PIN en claro) ────
+async function sha256hex(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 // ── STATE ────────────────────────────────────────────────
 let db, players=[], sessions=[], matches=[], season=null;
 let pendingPlayers=[];  // jugadores con active=false pendientes de aprobación
 let SS = {fmt:null,selIds:[],confirmMid:null};
 let spBuf='', cpBuf='', apBuf='';
 let adminAuthed=false;
+let adminHashCache='';
 
 // ── DEMO PENDING ─────────────────────────────────────────
 const D_PENDING=[
@@ -1130,16 +1137,19 @@ async function doSubmit(){
   const sid=document.getElementById('submitter-sel').value;
   const p=players.find(x=>x.id===sid);
   if(!p){showErr('sp-err','Seleccioná quién sos');return;}
-  const ok=DEMO_MODE?spBuf==='1234':verPin(p,spBuf);
-  if(!ok){showErr('sp-err','PIN incorrecto');shakeEl('sp-dots');spBuf='';updSpDots();return;}
-  if(DEMO_MODE){toast('ℹ️','Demo — resultado enviado (sin guardado real)');closeOverlay('submit-ov');checkBadgeUnlocks();return;}
+  if(DEMO_MODE){
+    if(spBuf!=='1234'){showErr('sp-err','PIN incorrecto (demo: 1234)');shakeEl('sp-dots');spBuf='';updSpDots();return;}
+    toast('ℹ️','Demo — resultado enviado (sin guardado real)');closeOverlay('submit-ov');checkBadgeUnlocks();return;
+  }
+  const hash=await sha256hex(spBuf);
+  const{data}=await db.rpc('verify_player_pin',{player_id:sid,pin_hash:hash});
+  if(data!==true){showErr('sp-err','PIN incorrecto');shakeEl('sp-dots');spBuf='';updSpDots();return;}
   await saveResult(sid);
   closeOverlay('submit-ov');
   await reloadAll();
   loadHome();
   checkBadgeUnlocks();
 }
-function verPin(p,pin){return btoa(pin)===p.pin_hash;}
 function shakeEl(id){const el=document.getElementById(id);if(!el)return;el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}
 
 // ── PIN CONFIRM ───────────────────────────────────────────
@@ -1160,7 +1170,13 @@ async function doConfirm(){
   const m=matches.find(x=>x.id===SS.confirmMid);
   if(!m)return;
   const allPids=[m.player1_id,m.player2_id,m.player3_id,m.player4_id,m.team1_p1,m.team1_p2,m.team2_p1,m.team2_p2].filter(Boolean);
-  const cfm=players.find(p=>allPids.includes(p.id)&&p.id!==m.submitted_by&&verPin(p,cpBuf));
+  const hash=await sha256hex(cpBuf);
+  // encontrar el jugador del partido cuyo hash coincide (server-side por RPC)
+  let cfm=null;
+  for(const pid of allPids.filter(pid=>pid!==m.submitted_by)){
+    const{data}=await db.rpc('verify_player_pin',{player_id:pid,pin_hash:hash});
+    if(data===true){cfm=players.find(p=>p.id===pid);break;}
+  }
   if(!cfm){showErr('cp-err','PIN incorrecto');shakeEl('cp-dots');cpBuf='';updCpDots();return;}
   await db.from('matches').update({status:'confirmed',confirmed_by:cfm.id}).eq('id',m.id);
   const pts=m.pts_awarded||{};
@@ -1272,9 +1288,17 @@ function apKey(k){
   if(apBuf.length===4) checkAdminPin();
 }
 function updApDots(){for(let i=1;i<=4;i++)document.getElementById('ap'+i).classList.toggle('on',i<=apBuf.length);}
-function checkAdminPin(){
-  if(apBuf===ADMIN_PIN||(DEMO_MODE&&apBuf==='1234')){
+async function checkAdminPin(){
+  if(DEMO_MODE){
+    if(apBuf==='1234'){adminAuthed=true;adminHashCache=await sha256hex(apBuf);closeOverlay('admin-pin-ov');showAdminModal();}
+    else{showErr('ap-err','PIN incorrecto');shakeEl('ap-dots');apBuf='';updApDots();}
+    return;
+  }
+  const hash=await sha256hex(apBuf);
+  const{data,error}=await db.rpc('verify_admin_pin',{pin_hash:hash});
+  if(data===true){
     adminAuthed=true;
+    adminHashCache=hash;  // guardamos hash para re-verificar en operaciones sensibles
     closeOverlay('admin-pin-ov');
     showAdminModal();
   }else{
@@ -1338,6 +1362,7 @@ function genPin(){return String(Math.floor(1000+Math.random()*9000));}
 
 async function approvePlayer(pid,name,initials,wa){
   const pin=genPin();
+  const pinHash=await sha256hex(pin);
   if(DEMO_MODE){
     pendingPlayers=pendingPlayers.filter(p=>p.id!==pid);
     players=[...players,{id:pid,name,initials,points:1000,played:0,won:0,lost:0,streak:0,total_saturdays:0,active:true}];
@@ -1349,11 +1374,16 @@ async function approvePlayer(pid,name,initials,wa){
     toast('✓',`${name} aprobado · PIN enviado por WhatsApp`);
     return;
   }
-  const{error}=await db.from('players').update({active:true,pin_hash:btoa(pin)}).eq('id',pid);
-  if(error){toast('❌',error.message);return;}
+  // RPC verifica admin + actualiza player en una sola transacción server-side
+  const{data,error}=await db.rpc('approve_player',{
+    p_id:pid,
+    p_pin_hash:pinHash,
+    admin_hash:adminHashCache
+  });
+  if(error||data===false){toast('❌',error?.message||'Error al aprobar');return;}
   pendingPlayers=pendingPlayers.filter(p=>p.id!==pid);
-  const{data}=await db.from('players').select('*').eq('active',true).order('points',{ascending:false});
-  players=data||[];
+  const{data:pd}=await db.from('players').select('*').eq('active',true).order('points',{ascending:false});
+  players=pd||[];
   updateAdminBadge();
   renderAdminPending();
   const cnt=document.getElementById('tab-pending-count');
@@ -1385,7 +1415,8 @@ async function rejectPlayer(pid,name){
     toast('ℹ️',`Solicitud de ${name} rechazada`);
     return;
   }
-  await db.from('players').delete().eq('id',pid);
+  const{data,error}=await db.rpc('reject_player',{p_id:pid,admin_hash:adminHashCache});
+  if(error||data===false){toast('❌',error?.message||'Error al rechazar');return;}
   pendingPlayers=pendingPlayers.filter(p=>p.id!==pid);
   updateAdminBadge();
   renderAdminPending();
@@ -1396,8 +1427,9 @@ async function resetPin(pid,name){
   const pin=prompt(`Nuevo PIN de 4 dígitos para ${name}:`);
   if(!pin||pin.length!==4||!/^\d+$/.test(pin)){toast('⚠️','PIN inválido');return;}
   if(DEMO_MODE){toast('ℹ️',`Demo — PIN de ${name} actualizado`);return;}
-  const{error}=await db.from('players').update({pin_hash:btoa(pin)}).eq('id',pid);
-  if(error){toast('❌',error.message);return;}
+  const pinHash=await sha256hex(pin);
+  const{data,error}=await db.rpc('approve_player',{p_id:pid,p_pin_hash:pinHash,admin_hash:adminHashCache});
+  if(error||data===false){toast('❌',error?.message||'Error');return;}
   toast('✓',`PIN de ${name} actualizado`);
 }
 
