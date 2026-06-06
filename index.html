@@ -753,7 +753,7 @@ const FMTS = [
   {id:'tb7',        icon:'🎯', name:'Tiebreak 7',     sub:'TB a 7 · punto de oro',       desc:'Tiebreak clásico a 7 con punto de oro en 7-7. Rápido y decisivo.',                                    pts:[{l:'Victoria',v:'+7'},{l:'Derrota',v:'+2'}]},
   {id:'set_normal', icon:'🎾', name:'Set Normal',      sub:'6 juegos con tiebreak',       desc:'Set completo a 6 juegos. Tiebreak al 6-6. El formato más cercano al tenis real.',                     pts:[{l:'Victoria',v:'+20'},{l:'Derrota',v:'+6'},{l:'Bagel 6-0',v:'+8 bonus'}]},
   {id:'set9',       icon:'🔥', name:'Set 9 Juegos',   sub:'Primero en 5 juegos',         desc:'Sin tiebreak, sin ventajas. Primero en ganar 5 juegos. Más corto que set normal.',                    pts:[{l:'Victoria',v:'+15'},{l:'Derrota',v:'+5'}]},
-  {id:'d21',        icon:'🎰', name:'Dinámica del 21',sub:'Grupos · primero a 21',        desc:'Todos contra todos rotando servicio. Cada punto ganado suma 1. Primero a 21 gana.',                    pts:[{l:'1° lugar',v:'+15'},{l:'2° lugar',v:'+8'},{l:'3°/4°',v:'+3'}]},
+  {id:'d21',        icon:'🎰', name:'Dinámica del 21',sub:'Equipos · primero a 21',       desc:'Dos equipos compiten juntos. Cada punto suma al equipo. El equipo que llega primero a 21 gana.',        pts:[{l:'Equipo ganador',v:'+10 c/u'},{l:'Equipo perdedor',v:'+3 c/u'}]},
   {id:'americano',  icon:'🔄', name:'Americano',       sub:'4 jugadores rotando parejas', desc:'Todos juegan con y contra todos. Quien más puntos acumule gana. Máxima interacción.',                  pts:[{l:'1° lugar',v:'+20'},{l:'2° lugar',v:'+12'},{l:'3°/4°',v:'+5'}]},
   {id:'rebote',     icon:'🏓', name:'El Rebote',       sub:'3 jugadores · eliminación',   desc:'Dos juegan, el tercero espera. Pierde quien comete el error. Primero a 11 rondas gana.',              pts:[{l:'Ganar ronda',v:'+8'},{l:'Sobrevivir +5',v:'+2'}]},
   {id:'dobles_stb10',icon:'🤝',name:'Dobles STB',     sub:'Parejas · STB a 10',          desc:'Dobles en Super Tiebreak. Cada jugador de la pareja ganadora recibe puntos individuales.',             pts:[{l:'Victoria c/u',v:'+8'},{l:'Derrota c/u',v:'+2'}]},
@@ -799,7 +799,7 @@ async function sha256hex(str){
 // ── STATE ────────────────────────────────────────────────
 let db, players=[], sessions=[], matches=[], season=null;
 let pendingPlayers=[];  // jugadores con active=false pendientes de aprobación
-let SS = {fmt:null,selIds:[],confirmMid:null};
+let SS = {fmt:null,selIds:[],teamA:[],teamB:[],d21picking:'A',confirmMid:null};
 let spBuf='', cpBuf='', apBuf='', epBuf='';
 let epPid='';
 let adminAuthed=false;
@@ -1090,7 +1090,38 @@ function matchCard(m,showCfm=false){
       ${cfmBtn}
     </div>`;
   }
-  const grp=['d21','americano','rebote'].includes(m.format);
+  // d21 por equipos
+  if(m.format==='d21'&&m.is_team){
+    const tA=(m.team_a||[m.player1_id,m.player2_id].filter(Boolean));
+    const tB=(m.team_b||[m.player3_id,m.player4_id].filter(Boolean));
+    const plsA=tA.map(id=>players.find(p=>p.id===id)).filter(Boolean);
+    const plsB=tB.map(id=>players.find(p=>p.id===id)).filter(Boolean);
+    const wA=m.winner_team===1;
+    const ptA=plsA[0]?pts[plsA[0].id]||0:0;
+    const ptB=plsB[0]?pts[plsB[0].id]||0:0;
+    const nA=plsA.map(p=>p.name.split(' ')[0]).join(', ');
+    const nB=plsB.map(p=>p.name.split(' ')[0]).join(', ');
+    return `<div class="mc ${m.status==='pending'?'pend':''}">
+      <div class="mc-meta"><span class="mc-date">${dt}</span><span class="fmtbadge ${cls}">${fmt.name}</span></div>
+      <div class="mc-meta" style="margin-bottom:10px">${stBadge}</div>
+      <div class="mc-players">
+        <div class="mc-pl" style="text-align:center">
+          <div class="mc-av ${wA?'win':''}" style="background:rgba(45,122,58,.15)">🟢</div>
+          <div class="mc-pn" style="font-size:.72rem">${nA}</div>
+          <div style="font-size:.6rem;color:var(--txm);font-family:var(--fm)">Equipo A</div>
+        </div>
+        <div class="mc-score"><div class="mc-sc"><em>${m.score1}</em>–${m.score2}</div></div>
+        <div class="mc-pl" style="text-align:center">
+          <div class="mc-av ${!wA?'win':''}" style="background:rgba(196,98,45,.15)">🟠</div>
+          <div class="mc-pn" style="font-size:.72rem">${nB}</div>
+          <div style="font-size:.6rem;color:var(--txm);font-family:var(--fm)">Equipo B</div>
+        </div>
+      </div>
+      <div class="mc-pts"><span class="delta ${wA?'du':'dd'}">${wA?'▲ +':'▼ '}${ptA} c/u</span><span class="delta ${!wA?'du':'dd'}">${!wA?'▲ +':'▼ '}${ptB} c/u</span></div>
+      ${cfmBtn}
+    </div>`;
+  }
+  const grp=['americano','rebote'].includes(m.format);
   if(grp){
     const pids=[m.player1_id,m.player2_id,m.player3_id,m.player4_id].filter(Boolean);
     const pls=pids.map(id=>players.find(p=>p.id===id)).filter(Boolean);
@@ -1220,7 +1251,7 @@ function openProfile(pid){
 
 // ── SUBMIT FLOW ────────────────────────────────────────────
 function openSubmit(){
-  SS={fmt:null,selIds:[]};
+  SS={fmt:null,selIds:[],teamA:[],teamB:[],d21picking:'A'};
   spBuf='';
   // build format picker
   document.getElementById('fmt-picker').innerHTML=FMTS.map(f=>`<div class="fpbtn" onclick="selFmt('${f.id}',this)"><div class="fpbtn-i">${f.icon}</div><span class="fpbtn-n">${f.name}</span><span class="fpbtn-d">${f.sub}</span></div>`).join('');
@@ -1231,20 +1262,72 @@ function gotoFlow(n){[1,2,3].forEach(i=>{document.getElementById('fl'+i).classLi
 function selFmt(id,el){
   document.querySelectorAll('.fpbtn').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel');
-  SS.fmt=id; SS.selIds=[];
+  SS.fmt=id; SS.selIds=[]; SS.teamA=[]; SS.teamB=[]; SS.d21picking='A';
   buildStep2(id);
   setTimeout(()=>gotoFlow(2),160);
 }
 function buildStep2(fmt){
   const isD=fmt.startsWith('dobles');
+  const isD21=fmt==='d21';
   const isG=['d21','americano','rebote'].includes(fmt);
-  const max=fmt==='americano'?4:fmt==='d21'?4:isD?4:fmt==='rebote'?3:2;
+  const max=fmt==='americano'?4:isD?4:fmt==='rebote'?3:2;
   document.getElementById('fl2-title').textContent=FMT_MAP[fmt]?.name||fmt;
-  document.getElementById('fl2-sub').textContent=isD?'Seleccioná 4 jugadores (Equipo 1 primero, luego Equipo 2)':`Seleccioná ${max} jugador${max>1?'es':''}`;
-  document.getElementById('ppicker').innerHTML=players.map(p=>`<button class="ppbtn" id="pp-${p.id}" onclick="togglePP('${p.id}',${max},${isD})"><div class="ppav">${p.initials}</div>${p.name.split(' ')[0]}</button>`).join('');
+  if(isD21){
+    document.getElementById('fl2-sub').innerHTML='<span style="color:var(--acc)">🟢 Equipo A</span> · Seleccioná los jugadores de cada equipo';
+    document.getElementById('ppicker').innerHTML=
+      `<div id="d21-team-header" style="grid-column:1/-1;display:flex;gap:6px;margin-bottom:2px">
+        <button id="d21-btn-A" onclick="d21SwitchTeam('A')" style="flex:1;padding:7px 10px;border-radius:8px;background:rgba(45,122,58,.18);border:2px solid var(--gl);color:var(--tx);font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--fb);transition:all .2s">🟢 Equipo A <span id="d21-cnt-A" style="opacity:.7"></span></button>
+        <button id="d21-btn-B" onclick="d21SwitchTeam('B')" style="flex:1;padding:7px 10px;border-radius:8px;background:var(--bg3);border:2px solid var(--bd);color:var(--txm);font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--fb);transition:all .2s">🟠 Equipo B <span id="d21-cnt-B" style="opacity:.7"></span></button>
+      </div>`+
+      players.map(p=>`<button class="ppbtn" id="pp-${p.id}" onclick="togglePPD21('${p.id}')"><div class="ppav">${p.initials}</div>${p.name.split(' ')[0]}</button>`).join('');
+  }else{
+    document.getElementById('fl2-sub').textContent=isD?'Seleccioná 4 jugadores (Equipo 1 primero, luego Equipo 2)':`Seleccioná ${max} jugador${max>1?'es':''}`;
+    document.getElementById('ppicker').innerHTML=players.map(p=>`<button class="ppbtn" id="pp-${p.id}" onclick="togglePP('${p.id}',${max},${isD})"><div class="ppav">${p.initials}</div>${p.name.split(' ')[0]}</button>`).join('');
+  }
   document.getElementById('sc-block').innerHTML='';
   document.getElementById('predictor-block').innerHTML='';
 }
+
+// ── D21 TEAM PICKER ───────────────────────────────────────
+function d21SwitchTeam(team){
+  SS.d21picking=team;
+  const bA=document.getElementById('d21-btn-A');
+  const bB=document.getElementById('d21-btn-B');
+  if(bA&&bB){
+    if(team==='A'){
+      bA.style.background='rgba(45,122,58,.18)';bA.style.borderColor='var(--gl)';bA.style.color='var(--tx)';
+      bB.style.background='var(--bg3)';bB.style.borderColor='var(--bd)';bB.style.color='var(--txm)';
+      document.getElementById('fl2-sub').innerHTML='<span style="color:var(--acc)">🟢 Equipo A</span> · Seleccioná los jugadores de cada equipo';
+    }else{
+      bB.style.background='rgba(196,98,45,.18)';bB.style.borderColor='var(--clay)';bB.style.color='var(--tx)';
+      bA.style.background='var(--bg3)';bA.style.borderColor='var(--bd)';bA.style.color='var(--txm)';
+      document.getElementById('fl2-sub').innerHTML='<span style="color:var(--cll)">🟠 Equipo B</span> · Seleccioná los jugadores de cada equipo';
+    }
+  }
+}
+function togglePPD21(id){
+  const inA=SS.teamA.includes(id), inB=SS.teamB.includes(id);
+  // si ya está en el equipo activo → deseleccionar
+  if(SS.d21picking==='A'){
+    if(inA){SS.teamA=SS.teamA.filter(x=>x!==id);}
+    else{SS.teamB=SS.teamB.filter(x=>x!==id);SS.teamA.push(id);}
+  }else{
+    if(inB){SS.teamB=SS.teamB.filter(x=>x!==id);}
+    else{SS.teamA=SS.teamA.filter(x=>x!==id);SS.teamB.push(id);}
+  }
+  SS.selIds=[...SS.teamA,...SS.teamB];
+  // actualizar botones
+  document.querySelectorAll('.ppbtn').forEach(b=>b.classList.remove('sel','opp'));
+  SS.teamA.forEach(pid=>{const b=document.getElementById('pp-'+pid);if(b)b.classList.add('sel');});
+  SS.teamB.forEach(pid=>{const b=document.getElementById('pp-'+pid);if(b)b.classList.add('opp');});
+  // actualizar conteos en los tabs
+  const cntA=document.getElementById('d21-cnt-A');
+  const cntB=document.getElementById('d21-cnt-B');
+  if(cntA)cntA.textContent=SS.teamA.length?`(${SS.teamA.length})`:'';
+  if(cntB)cntB.textContent=SS.teamB.length?`(${SS.teamB.length})`:'';
+  renderScBlock();
+}
+
 function togglePP(id,max,isD){
   const idx=SS.selIds.indexOf(id);
   if(idx>=0)SS.selIds.splice(idx,1);
@@ -1256,11 +1339,29 @@ function togglePP(id,max,isD){
 }
 function renderScBlock(){
   const el=document.getElementById('sc-block');
-  const {fmt,selIds:ids}=SS;
+  const {fmt,selIds:ids,teamA,teamB}=SS;
   if(!ids.length){el.innerHTML='';return;}
   const isD=fmt.startsWith('dobles');
+  const isD21=fmt==='d21';
   const isG=['d21','americano','rebote'].includes(fmt);
-  if(isG){
+  if(isD21){
+    if(!teamA.length||!teamB.length){el.innerHTML='';return;}
+    const namesA=teamA.map(id=>players.find(p=>p.id===id)?.name.split(' ')[0]||'?').join(', ');
+    const namesB=teamB.map(id=>players.find(p=>p.id===id)?.name.split(' ')[0]||'?').join(', ');
+    el.innerHTML=`<div class="sc-block">
+      <div style="font-size:.63rem;font-family:var(--fm);color:var(--txm);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">Marcador final</div>
+      <div class="sc-row">
+        <div class="sc-lbl" style="gap:6px"><span style="font-size:.9rem">🟢</span><span style="color:var(--acc);font-weight:700">Eq. A</span><span style="color:var(--txm);font-size:.72rem">${namesA}</span></div>
+        <input class="sc-in" type="number" id="sc-d21-A" min="0" placeholder="0" oninput="updD21W()">
+        <span class="sc-win" id="sw-d21-A"></span>
+      </div>
+      <div class="sc-row">
+        <div class="sc-lbl" style="gap:6px"><span style="font-size:.9rem">🟠</span><span style="color:var(--cll);font-weight:700">Eq. B</span><span style="color:var(--txm);font-size:.72rem">${namesB}</span></div>
+        <input class="sc-in" type="number" id="sc-d21-B" min="0" placeholder="0" oninput="updD21W()">
+        <span class="sc-win" id="sw-d21-B"></span>
+      </div>
+    </div>`;
+  }else if(isG){
     if(ids.length<2){el.innerHTML='';return;}
     const max=ids.length;
     el.innerHTML=`<div class="sc-block"><div style="font-size:.63rem;font-family:var(--fm);color:var(--txm);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Posición final</div>${ids.map((id,i)=>{const p=players.find(x=>x.id===id);return `<div class="sc-row"><div class="sc-lbl"><div class="av" style="width:22px;height:22px;font-size:.56rem">${p?.initials}</div>${p?.name.split(' ')[0]}</div><select class="sc-in" id="pos-${id}" style="width:74px">${Array.from({length:max},(_,j)=>`<option value="${j+1}" ${j===i?'selected':''}>${['🥇','🥈','🥉','4°'][j]}</option>`).join('')}</select></div>`;}).join('')}</div>`;
@@ -1275,6 +1376,14 @@ function renderScBlock(){
     const maxSc=fmt==='stb10'?'10':fmt==='tb7'?'7':fmt==='set9'?'5':'6';
     el.innerHTML=`<div class="sc-block"><div class="sc-row"><div class="sc-lbl"><div class="av" style="width:22px;height:22px;font-size:.56rem">${p1?.initials}</div>${p1?.name.split(' ')[0]}</div><input class="sc-in" type="number" id="sc-1" min="0" max="${maxSc}" placeholder="0" oninput="updW()"><span class="sc-win" id="sw-1"></span></div><div class="sc-row"><div class="sc-lbl"><div class="av" style="width:22px;height:22px;font-size:.56rem">${p2?.initials}</div>${p2?.name.split(' ')[0]}</div><input class="sc-in" type="number" id="sc-2" min="0" max="${maxSc}" placeholder="0" oninput="updW()"><span class="sc-win" id="sw-2"></span></div></div>`;
   }
+}
+function updD21W(){
+  const sA=+document.getElementById('sc-d21-A')?.value||0;
+  const sB=+document.getElementById('sc-d21-B')?.value||0;
+  const swA=document.getElementById('sw-d21-A');
+  const swB=document.getElementById('sw-d21-B');
+  if(swA)swA.textContent=sA>sB?'🏆 Ganador':'';
+  if(swB)swB.textContent=sB>sA?'🏆 Ganador':'';
 }
 function updW(){const s1=+document.getElementById('sc-1')?.value||0;const s2=+document.getElementById('sc-2')?.value||0;const sw1=document.getElementById('sw-1');const sw2=document.getElementById('sw-2');if(sw1)sw1.textContent=s1>s2?'👑 Ganador':'';if(sw2)sw2.textContent=s2>s1?'👑 Ganador':'';}
 function updDW(){const s1=+document.getElementById('sc-t1')?.value||0;const s2=+document.getElementById('sc-t2')?.value||0;const sw1=document.getElementById('sw-t1');const sw2=document.getElementById('sw-t2');if(sw1)sw1.textContent=s1>s2?'👑':'';if(sw2)sw2.textContent=s2>s1?'👑':'';}
@@ -1311,14 +1420,23 @@ function renderPredictor(){
 }
 
 function goStep3(){
-  const {fmt,selIds:ids}=SS;
+  const {fmt,selIds:ids,teamA,teamB}=SS;
   const isD=fmt.startsWith('dobles');
+  const isD21=fmt==='d21';
   const isG=['d21','americano','rebote'].includes(fmt);
   if(!fmt){toast('⚠️','Elegí un formato');return;}
-  if(ids.length<2){toast('⚠️','Seleccioná jugadores');return;}
-  if(isD&&ids.length!==4){toast('⚠️','Dobles requiere 4 jugadores');return;}
-  if(!isG&&!isD){const s1=+document.getElementById('sc-1')?.value;const s2=+document.getElementById('sc-2')?.value;if(isNaN(s1)||isNaN(s2)){toast('⚠️','Ingresá el marcador');return;}if(s1===s2){toast('⚠️','No puede quedar empatado');return;}}
-  if(isD){const s1=+document.getElementById('sc-t1')?.value;const s2=+document.getElementById('sc-t2')?.value;if(isNaN(s1)||isNaN(s2)){toast('⚠️','Ingresá el marcador');return;}if(s1===s2){toast('⚠️','No puede quedar empatado');return;}}
+  if(isD21){
+    if(!teamA.length||!teamB.length){toast('⚠️','Armá los dos equipos');return;}
+    const sA=+document.getElementById('sc-d21-A')?.value;
+    const sB=+document.getElementById('sc-d21-B')?.value;
+    if(isNaN(sA)||isNaN(sB)||(!sA&&!sB)){toast('⚠️','Ingresá el marcador');return;}
+    if(sA===sB){toast('⚠️','No puede quedar empatado');return;}
+  }else{
+    if(ids.length<2){toast('⚠️','Seleccioná jugadores');return;}
+    if(isD&&ids.length!==4){toast('⚠️','Dobles requiere 4 jugadores');return;}
+    if(!isG&&!isD){const s1=+document.getElementById('sc-1')?.value;const s2=+document.getElementById('sc-2')?.value;if(isNaN(s1)||isNaN(s2)){toast('⚠️','Ingresá el marcador');return;}if(s1===s2){toast('⚠️','No puede quedar empatado');return;}}
+    if(isD){const s1=+document.getElementById('sc-t1')?.value;const s2=+document.getElementById('sc-t2')?.value;if(isNaN(s1)||isNaN(s2)){toast('⚠️','Ingresá el marcador');return;}if(s1===s2){toast('⚠️','No puede quedar empatado');return;}}
+  }
   const sel=document.getElementById('submitter-sel');
   sel.innerHTML=players.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   if(ids.length)sel.value=ids[0];
@@ -1399,7 +1517,28 @@ async function saveResult(submitterId){
   if(!sess){const{data:ns}=await db.from('sessions').insert({date:today,season_id:season?.id}).select().single();sess=ns;sessions=[ns,...sessions];}
   let payload={session_id:sess.id,season_id:season?.id,format:fmt,status:'pending',submitted_by:submitterId};
   const pts={};
-  if(isG){
+  const isD21=fmt==='d21';
+  if(isD21){
+    const sA=+document.getElementById('sc-d21-A').value;
+    const sB=+document.getElementById('sc-d21-B').value;
+    const wtA=sA>sB;
+    const {teamA,teamB}=SS;
+    const ptWin=10,ptLose=3; // puntos por jugador d21 por equipo
+    teamA.forEach(id=>pts[id]=wtA?ptWin:ptLose);
+    teamB.forEach(id=>pts[id]=!wtA?ptWin:ptLose);
+    // guardamos equipo A en team1_* y equipo B en team2_*
+    payload={...payload,
+      is_doubles:false,is_team:true,
+      team_a:teamA,team_b:teamB,
+      score1:sA,score2:sB,
+      winner_team:wtA?1:2,
+      // compat: p1..p4 para vista de partidos (primeros de cada equipo)
+      player1_id:teamA[0]||null,player2_id:teamA[1]||null,
+      player3_id:teamB[0]||null,player4_id:teamB[1]||null,
+      winner_id:wtA?teamA[0]:teamB[0],
+      pts_awarded:pts
+    };
+  }else if(isG){
     const positions=ids.map(id=>({id,pos:+document.getElementById('pos-'+id)?.value||1})).sort((a,b)=>a.pos-b.pos);
     const ptArr=PTS[fmt]||[10,5,2,2];
     positions.forEach((p,i)=>pts[p.id]=ptArr[i]||0);
