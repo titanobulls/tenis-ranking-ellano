@@ -869,7 +869,15 @@ function nav(id,tab){
 }
 
 function updateSpill(){
-  document.getElementById('spill').textContent=season?season.label:'—';
+  if(!season){document.getElementById('spill').textContent='—';return;}
+  let txt=season.label;
+  if(season.end_date){
+    const d=new Date(season.end_date+'T12:00:00');
+    const day=d.getDate();
+    const mon=d.toLocaleString('es-CL',{month:'short'}).replace('.','');
+    txt+=` · hasta ${day} ${mon}`;
+  }
+  document.getElementById('spill').textContent=txt;
 }
 
 // ── HOME ─────────────────────────────────────────────────
