@@ -875,7 +875,9 @@ function updateSpill(){
     const d=new Date(season.end_date+'T12:00:00');
     const day=d.getDate();
     const mon=d.toLocaleString('es-CL',{month:'short'}).replace('.','');
-    txt+=` · hasta ${day} ${mon}`;
+    const yr=d.getFullYear();
+    const monCap=mon.charAt(0).toUpperCase()+mon.slice(1);
+    txt+=` · Termina el ${day} ${monCap} ${yr}`;
   }
   document.getElementById('spill').textContent=txt;
 }
