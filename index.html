@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ranking El Llano · Tenis</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -301,16 +301,93 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 .admin-tab{padding:7px 13px;border-radius:7px;font-size:.74rem;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--bg3);color:var(--txm);transition:all .2s;font-family:var(--fb);}
 .admin-tab:hover{color:var(--tx);}
 .admin-tab.on{background:rgba(45,122,58,.1);border-color:rgba(45,122,58,.3);color:var(--tx);}
-/* ── RESPONSIVE ──────────────────────────────────────── */
-@media(max-width:768px){
-  .rhead,.rrow{grid-template-columns:38px 1fr 70px 66px;}
-  .rhead>*:nth-child(n+5),.rrow>*:nth-child(n+5){display:none;}
-  .strip{grid-template-columns:repeat(2,1fr);}
-  .mgrid,.fmts-grid,.awards-grid{grid-template-columns:1fr;}
-  .fmt-picker{grid-template-columns:1fr;}
+/* ── BOTTOM NAV (mobile) ─────────────────────────────── */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--nav);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--bd);height:62px;align-items:stretch;justify-content:space-around;padding:0 0 env(safe-area-inset-bottom,0px);}
+.bntab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:none;cursor:pointer;color:var(--txm);font-family:var(--fb);transition:color .2s,transform .15s;padding:8px 2px;min-width:0;-webkit-tap-highlight-color:transparent;}
+.bntab:active{transform:scale(.88);}
+.bntab.on{color:var(--gl);}
+.bntab.on .bntab-i{transform:scale(1.18);}
+.bntab-i{font-size:1.15rem;line-height:1;transition:transform .22s cubic-bezier(.34,1.56,.64,1);}
+.bntab-l{font-size:.55rem;font-weight:600;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;}
+.bntab-cta{flex:0 0 48px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--cll),var(--clay));color:#fff!important;margin:auto 6px;box-shadow:0 4px 18px rgba(196,98,45,.45);align-self:center;flex-direction:row;padding:0;}
+.bntab-cta .bntab-i{font-size:1.5rem;color:#fff;transform:none!important;}
+/* ── RESPONSIVE ─── 4 breakpoints ───────────────────── */
+/* Tablet landscape · 1024–1279 */
+@media(min-width:1024px) and (max-width:1279px){
+  .wrap{max-width:980px;}
+}
+/* Tablet portrait · 768–1023 */
+@media(min-width:768px) and (max-width:1023px){
+  .wrap{padding:0 1.25rem;}
+  nav{padding:0 1.25rem;}
+  #home-2col{grid-template-columns:1fr!important;}
+  .fmts-grid{grid-template-columns:repeat(2,1fr);}
+  .awards-grid{grid-template-columns:repeat(2,1fr);}
+  .rhead,.rrow{grid-template-columns:40px 1fr 76px 72px 58px 70px;}
+  .rhead>*:nth-child(7),.rrow>*:nth-child(7){display:none;}
+  .spill{display:none;}
+  .bonus-grid{grid-template-columns:1fr 1fr!important;}
+  .prof-stats-row{gap:16px;}
+}
+/* Mobile · ≤767 */
+@media(max-width:767px){
+  nav{padding:0 .9rem;gap:6px;height:54px;}
+  .page{padding-top:54px;padding-bottom:70px;}
   .nav-tabs{display:none;}
+  .spill{display:none;}
+  .logo-sub{display:none;}
+  .bnav{display:flex;}
+  .hero{padding:30px 1rem 22px;}
+  .hero-sub{font-size:.82rem;}
+  .hero-ctas{flex-direction:column;align-items:stretch;padding:0 .5rem;}
+  .hero-ctas .btn-lg{width:100%;text-align:center;justify-content:center;}
+  .strip{grid-template-columns:repeat(2,1fr);}
+  .snum{font-size:1.8rem;}
+  .sitem{padding:13px 10px;}
+  .wrap{padding:0 .9rem;}
+  #home-2col{grid-template-columns:1fr!important;gap:16px!important;}
+  .rhead,.rrow{grid-template-columns:36px 1fr 64px 58px;}
+  .rhead>*:nth-child(n+5),.rrow>*:nth-child(n+5){display:none;}
+  .rrow{padding:10px 11px;}
+  .rhead{padding:8px 11px;}
+  .pname{font-size:.8rem;}
+  .ptscell{font-size:.95rem;}
+  .mgrid{grid-template-columns:1fr;}
+  .fmts-grid{grid-template-columns:1fr;}
+  .awards-grid{grid-template-columns:repeat(2,1fr);}
+  .fmt-picker{grid-template-columns:1fr;}
   .ppicker{grid-template-columns:repeat(2,1fr);}
   .badges-grid{grid-template-columns:repeat(3,1fr);}
+  .bonus-grid{grid-template-columns:1fr!important;}
+  .mc{padding:12px 13px;}
+  .overlay{padding:.4rem;align-items:flex-end;}
+  .modal{border-radius:20px 20px 0 0;max-width:100%!important;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .modal-body{padding:18px 16px;}
+  .pkeys{max-width:100%;gap:8px;}
+  .pkey{padding:17px 10px;font-size:1.05rem;border-radius:10px;min-height:52px;}
+  .pin-sheet{border-radius:22px 22px 0 0;padding:22px 18px calc(20px + env(safe-area-inset-bottom,0px));}
+  .toast{bottom:78px;}
+  .prof-hero{padding:18px 16px;flex-direction:column;align-items:flex-start;gap:10px;}
+  .prof-name{font-size:1.6rem;}
+  .pstat-n{font-size:1.3rem;}
+  .prof-stats-row{gap:12px;flex-wrap:wrap;}
+  .pending-player-card{flex-wrap:wrap;}
+  .ppc-actions{width:100%;justify-content:flex-end;margin-top:6px;}
+  .sec-title{font-size:1.25rem;}
+  .btn-lg{padding:11px 20px;font-size:.84rem;}
+  .admin-tab{padding:6px 11px;font-size:.72rem;}
+}
+/* Small phones · ≤389 */
+@media(max-width:389px){
+  .rhead,.rrow{grid-template-columns:32px 1fr 58px;}
+  .rhead>*:nth-child(n+4),.rrow>*:nth-child(n+4){display:none;}
+  .awards-grid{grid-template-columns:1fr;}
+  .hero h1{font-size:clamp(2.4rem,13vw,3rem);}
+  .pkey{padding:15px 8px;}
+  .badges-grid{grid-template-columns:repeat(2,1fr);}
+  #admin-btn{display:none;}
+  .nav-r{gap:5px;}
+  .btn-sm{padding:4px 8px;font-size:.68rem;}
 }
 </style>
 </head>
@@ -415,7 +492,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
     </div>
     <div class="sec">
       <div class="sec-hd"><div class="sec-title">Bonus de Temporada</div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="bonus-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="background:var(--bg2);border:1px solid rgba(249,115,22,.15);border-radius:12px;padding:15px">
           <div style="font-family:var(--fd);letter-spacing:1px;margin-bottom:7px;color:var(--warn)">🔥 Racha de Asistencia</div>
           <div style="font-size:.77rem;color:var(--txm);line-height:1.7">4 sábados seguidos → <strong style="color:var(--acc)">+15 pts</strong><br>8 seguidos → <strong style="color:var(--acc)">+25 pts</strong><br>12 seguidos → <strong style="color:var(--acc)">+40 pts</strong><br>Mes perfecto → <strong style="color:var(--acc)">+20 pts</strong></div>
@@ -734,8 +811,11 @@ function toggleTheme(){
 function nav(id,tab){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.bntab[data-page]').forEach(t=>t.classList.remove('on'));
   document.getElementById('p-'+id).classList.add('on');
   if(tab)tab.classList.add('on');
+  const bt=document.querySelector(`.bntab[data-page="${id}"]`);
+  if(bt)bt.classList.add('on');
   if(id==='home')loadHome();
   if(id==='ranking')loadFullRank();
   if(id==='matches')loadAllMatches();
@@ -1466,5 +1546,24 @@ function openRegModal(){
 // init badge state
 checkBadgeUnlocks();
 </script>
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bnav" id="bnav">
+  <button class="bntab on" data-page="home" onclick="nav('home')">
+    <span class="bntab-i">🏠</span><span class="bntab-l">Inicio</span>
+  </button>
+  <button class="bntab" data-page="ranking" onclick="nav('ranking')">
+    <span class="bntab-i">📊</span><span class="bntab-l">Ranking</span>
+  </button>
+  <button class="bntab bntab-cta" onclick="openSubmit()">
+    <span class="bntab-i">＋</span>
+  </button>
+  <button class="bntab" data-page="matches" onclick="nav('matches')">
+    <span class="bntab-i">🎾</span><span class="bntab-l">Partidos</span>
+  </button>
+  <button class="bntab" data-page="awards" onclick="nav('awards')">
+    <span class="bntab-i">🏆</span><span class="bntab-l">Premios</span>
+  </button>
+</nav>
+
 </body>
 </html>
