@@ -395,6 +395,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
   .btn-lg{padding:11px 20px;font-size:.84rem;}
   .admin-tab{padding:6px 11px;font-size:.72rem;}
 }
+/* Mobile: ocultar theme toggle y admin del top nav (van en el bottom nav) */
+@media(max-width:767px){
+  .nav-r .tt{display:none;}
+  .nav-r #admin-btn{display:none;}
+}
 /* Small phones · ≤389 */
 @media(max-width:389px){
   .rhead,.rrow{grid-template-columns:32px 1fr 58px;}
@@ -403,7 +408,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
   .hero h1{font-size:clamp(2.4rem,13vw,3rem);}
   .pkey{padding:15px 8px;}
   .badges-grid{grid-template-columns:repeat(2,1fr);}
-  #admin-btn{display:none;}
   .nav-r{gap:5px;}
   .btn-sm{padding:4px 8px;font-size:.68rem;}
 }
@@ -846,7 +850,7 @@ if(DEMO_MODE){
 }
 
 function boot(){
-  (function(){const t=localStorage.getItem('ellano-theme');if(t==='light'){document.documentElement.classList.add('light');const i=document.getElementById('tt-ic');if(i)i.textContent='☀️';}})();
+  (function(){const t=localStorage.getItem('ellano-theme');if(t==='light'){document.documentElement.classList.add('light');const i=document.getElementById('tt-ic');if(i)i.textContent='☀️';const bi=document.getElementById('bnav-tt-ic');if(bi)bi.textContent='☀️';}})();
   buildFormats();
   updateSpill();
   updateAdminBadge();
@@ -856,12 +860,17 @@ function boot(){
 function updateAdminBadge(){
   const b=document.getElementById('admin-badge');
   if(b) b.style.display=pendingPlayers.length?'inline':'none';
+  const bb=document.getElementById('bnav-admin-badge');
+  if(bb) bb.style.display=pendingPlayers.length?'inline':'none';
 }
 
 // ── THEME ────────────────────────────────────────────────
 function toggleTheme(){
   const l=document.documentElement.classList.toggle('light');
-  document.getElementById('tt-ic').textContent=l?'☀️':'🌙';
+  const ic=l?'☀️':'🌙';
+  document.getElementById('tt-ic').textContent=ic;
+  const bic=document.getElementById('bnav-tt-ic');
+  if(bic)bic.textContent=ic;
   localStorage.setItem('ellano-theme',l?'light':'dark');
 }
 
@@ -1685,11 +1694,11 @@ checkBadgeUnlocks();
   <button class="bntab bntab-cta" onclick="openSubmit()">
     <span class="bntab-i">＋</span>
   </button>
-  <button class="bntab" data-page="matches" onclick="nav('matches')">
-    <span class="bntab-i">🎾</span><span class="bntab-l">Partidos</span>
+  <button class="bntab" id="bnav-admin-btn" onclick="openAdminPanel()">
+    <span class="bntab-i">⚙️</span><span class="bntab-l">Admin<span id="bnav-admin-badge" style="display:none;color:var(--danger);font-size:.7em;vertical-align:top">●</span></span>
   </button>
-  <button class="bntab" data-page="awards" onclick="nav('awards')">
-    <span class="bntab-i">🏆</span><span class="bntab-l">Premios</span>
+  <button class="bntab" onclick="toggleTheme()" id="bnav-theme-btn">
+    <span class="bntab-i" id="bnav-tt-ic">🌙</span><span class="bntab-l">Tema</span>
   </button>
 </nav>
 
