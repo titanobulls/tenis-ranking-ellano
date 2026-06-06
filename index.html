@@ -1919,8 +1919,8 @@ async function adminCancelMatch(mid){
     loadHome();
     return;
   }
-  const{error}=await db.from('matches').delete().eq('id',mid);
-  if(error){toast('❌',error.message);return;}
+  const{data,error}=await db.rpc('admin_delete_match',{match_id:mid,admin_hash:adminHashCache});
+  if(error||data===false){toast('❌',error?.message||'Sin permiso');return;}
   toast('🗑','Resultado cancelado');
   await reloadAll();
   renderAdminResults();
