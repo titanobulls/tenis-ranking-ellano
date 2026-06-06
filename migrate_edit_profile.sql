@@ -7,7 +7,7 @@ create or replace function update_player_profile(
   p_id       uuid,
   p_name     text,
   p_initials text,
-  pin_hash   text
+  p_pin_hash text
 )
 returns boolean
 language plpgsql
@@ -17,7 +17,7 @@ begin
   if not exists (
     select 1 from players
     where id = p_id
-      and pin_hash = update_player_profile.pin_hash
+      and pin_hash = p_pin_hash
       and active = true
   ) then
     return false;

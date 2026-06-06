@@ -37,7 +37,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 .logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--gl),var(--gd));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 16px rgba(45,122,58,.35);}
 .logo-name{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px;}
 .logo-sub{font-size:.55rem;font-family:var(--fm);color:var(--txm);letter-spacing:2px;text-transform:uppercase;display:block;}
-.nav-tabs{display:flex;gap:2px;}
+.nav-tabs{display:flex;gap:2px;position:absolute;left:50%;transform:translateX(-50%);}
 .tab{padding:5px 11px;border-radius:6px;font-size:.74rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--txm);transition:all .2s;font-family:var(--fb);}
 .tab:hover{color:var(--tx);background:var(--bg3);}
 .tab.on{color:var(--tx);background:var(--bg4);border:1px solid var(--bd);}
@@ -1649,7 +1649,7 @@ async function saveProfileEdit(){
     p_id:epPid,
     p_name:name,
     p_initials:initials,
-    pin_hash:hash
+    p_pin_hash:hash
   });
   if(error||data===false){
     showErr('ep-err','PIN incorrecto');
