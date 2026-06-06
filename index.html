@@ -327,6 +327,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
 @media(min-width:1024px) and (max-width:1279px){
   .wrap{max-width:980px;}
 }
+/* Hero spill — solo mobile+tablet */
+@media(min-width:1024px){#hero-spill{display:none!important;}}
+
 /* Tablet portrait · 768–1023 */
 @media(min-width:768px) and (max-width:1023px){
   .wrap{padding:0 1.25rem;}
@@ -433,6 +436,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav);backdr
   <div class="hero">
     <div class="hero-bg"></div><div class="court"></div>
     <div style="position:relative;z-index:1">
+      <div id="hero-spill" style="display:none;justify-content:center;margin-bottom:10px"><div class="spill" id="hero-spill-pill" style="display:inline-flex"></div></div>
       <div class="eyebrow au">🎾 Ranking Oficial</div>
       <h1 class="au" style="animation-delay:.08s">RANKING<br><em>EL LLANO</em></h1>
       <p class="hero-sub au" style="animation-delay:.16s">Temporada semestral · Individual y dobles · Ingresá tus resultados al instante.</p>
@@ -880,6 +884,9 @@ function updateSpill(){
     txt+=` · Termina el ${day} ${monCap} ${yr}`;
   }
   document.getElementById('spill').textContent=txt;
+  const hero=document.getElementById('hero-spill');
+  const heroPill=document.getElementById('hero-spill-pill');
+  if(hero&&heroPill){heroPill.textContent=txt;hero.style.display='';}
 }
 
 // ── HOME ─────────────────────────────────────────────────
