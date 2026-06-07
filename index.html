@@ -986,7 +986,7 @@ function loadHome(){
   document.getElementById('s-s').innerHTML=`<em>${sessions.length}</em>`;
   const l=players[0];
   document.getElementById('s-l').innerHTML=l?`<em>${l.name.split(' ')[0]}</em>`:'—';
-  renderRankTable('home-rank',players.slice(0,5));
+  renderRankTable('home-rank',players.slice(0,10));
   renderMatchCards('home-matches',conf.slice(0,4));
   renderFeed();
   const pend=matches.filter(m=>m.status==='pending');
