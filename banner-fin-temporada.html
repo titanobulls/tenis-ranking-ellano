@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fin de Temporada — Ranking BancoEstado</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --green:#1E6B2A;--gl:#2D7A3A;--gd:#155220;
+  --gold:#B8860B;--silver:#607080;--bronze:#8B4513;
+  --acc:#009955;
+  --bg:#F4F8F4;--bg2:#ffffff;--bg3:#EBF2EC;--bg4:#DDE9DE;
+  --bd:rgba(0,0,0,.09);
+  --tx:#0D1A0F;--txm:#4A6B50;--txd:#8AAA90;
+  --fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+}
+body{background:#e8ede8;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--fb);}
+
+.banner{
+  width:1280px;height:720px;
+  background:var(--bg);
+  position:relative;overflow:hidden;
+  display:grid;grid-template-columns:1fr 1fr;
+}
+
+.banner::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 50% 70% at 20% 0%,rgba(45,122,58,.1) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 50% at 85% 80%,rgba(184,134,11,.07) 0%,transparent 60%);
+  pointer-events:none;z-index:1;
+}
+
+.banner::after{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:2;opacity:.6;
+}
+
+.left{position:relative;z-index:10;padding:60px 50px;display:flex;flex-direction:column;justify-content:center;}
+
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--gl),var(--gd));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 20px rgba(45,122,58,.4);}
+.logo-text{font-family:var(--fd);font-size:1.3rem;letter-spacing:3px;color:var(--tx);}
+.logo-sub{font-size:.55rem;font-family:var(--fm);color:var(--txm);letter-spacing:2px;text-transform:uppercase;}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);
+  border-radius:100px;padding:5px 14px;
+  font-size:.7rem;font-family:var(--fm);color:#FCA5A5;
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:18px;width:fit-content;
+}
+.eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:#EF4444;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+h1{font-family:var(--fd);font-size:4.5rem;line-height:.88;letter-spacing:3px;color:var(--tx);margin-bottom:6px;}
+h1 em{color:var(--gl);font-style:normal;}
+h1 .date{display:block;font-size:2.8rem;color:var(--gold);margin-top:4px;}
+
+.subtitle{font-size:.92rem;color:var(--txm);line-height:1.6;margin-top:14px;max-width:380px;}
+
+.countdown{
+  display:flex;gap:14px;margin-top:28px;
+}
+.cd-item{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:10px;
+  padding:12px 16px;text-align:center;min-width:70px;
+}
+.cd-num{font-family:var(--fd);font-size:2rem;color:var(--tx);line-height:1;}
+.cd-lbl{font-size:.58rem;font-family:var(--fm);color:var(--txm);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;}
+
+.right{position:relative;z-index:10;padding:40px 50px 40px 20px;display:flex;flex-direction:column;justify-content:center;}
+
+.section-label{
+  font-size:.65rem;font-family:var(--fm);color:var(--txm);
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-label::before{content:'';width:3px;height:14px;background:var(--gl);border-radius:2px;}
+
+.podium{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+
+.pod-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--bd);border-radius:12px;
+  padding:12px 16px;transition:all .2s;
+}
+.pod-row.p1{background:linear-gradient(90deg,rgba(201,144,10,.1) 0%,var(--bg2) 60%);border-color:rgba(201,144,10,.2);}
+.pod-row.p2{background:linear-gradient(90deg,rgba(122,139,168,.06) 0%,var(--bg2) 60%);border-color:rgba(122,139,168,.15);}
+.pod-row.p3{background:linear-gradient(90deg,rgba(156,90,26,.06) 0%,var(--bg2) 60%);border-color:rgba(156,90,26,.15);}
+
+.pod-rank{font-family:var(--fd);font-size:1.6rem;width:30px;text-align:center;}
+.pod-rank.r1{color:var(--gold);}
+.pod-rank.r2{color:var(--silver);}
+.pod-rank.r3{color:var(--bronze);}
+.pod-rank.r4{color:var(--txd);}
+
+.pod-av{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg4);display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:700;border:2px solid var(--bd);flex-shrink:0;
+}
+.pod-row.p1 .pod-av{border-color:rgba(201,144,10,.4);background:rgba(201,144,10,.12);color:var(--gold);}
+.pod-row.p2 .pod-av{border-color:rgba(122,139,168,.4);background:rgba(122,139,168,.1);color:var(--silver);}
+.pod-row.p3 .pod-av{border-color:rgba(156,90,26,.4);background:rgba(156,90,26,.1);color:var(--bronze);}
+
+.pod-info{flex:1;}
+.pod-name{font-weight:600;font-size:.88rem;}
+.pod-pts{font-size:.68rem;font-family:var(--fm);color:var(--txm);margin-top:1px;}
+
+.pod-medal{font-size:1.3rem;}
+
+.awards-section{margin-top:4px;}
+.awards-label{
+  font-size:.65rem;font-family:var(--fm);color:var(--txm);
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.awards-label::before{content:'';width:3px;height:14px;background:var(--gold);border-radius:2px;}
+
+.awards-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.aw-card{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:9px;
+  padding:9px 12px;display:flex;align-items:center;gap:9px;
+}
+.aw-icon{font-size:1.2rem;}
+.aw-info{}
+.aw-name{font-size:.74rem;font-weight:600;color:var(--tx);}
+.aw-desc{font-size:.58rem;color:var(--txm);margin-top:1px;}
+
+.footer-note{
+  position:absolute;bottom:20px;left:50px;right:50px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:10;
+}
+.fn-left{font-size:.62rem;font-family:var(--fm);color:var(--txd);letter-spacing:1px;}
+.fn-right{font-size:.62rem;font-family:var(--fm);color:var(--txd);display:flex;align-items:center;gap:6px;}
+.fn-right::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--acc);animation:blink 2s infinite;}
+
+.court-lines{
+  position:absolute;inset:0;z-index:0;
+  opacity:.06;
+  background-image:
+    linear-gradient(to bottom,transparent 48%,rgba(0,0,0,.4) 48%,rgba(0,0,0,.4) 52%,transparent 52%),
+    linear-gradient(to right,transparent 30%,rgba(0,0,0,.4) 30%,rgba(0,0,0,.4) 30.3%,transparent 30.3%),
+    linear-gradient(to right,transparent 69.7%,rgba(0,0,0,.4) 69.7%,rgba(0,0,0,.4) 70%,transparent 70%);
+}
+
+.glow-orb{
+  position:absolute;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(45,122,58,.08),transparent 70%);
+  z-index:0;
+}
+.glow-orb.o1{top:-80px;left:-60px;}
+.glow-orb.o2{bottom:-100px;right:-80px;background:radial-gradient(circle,rgba(184,134,11,.06),transparent 70%);}
+</style>
+</head>
+<body>
+<div class="banner">
+  <div class="court-lines"></div>
+  <div class="glow-orb o1"></div>
+  <div class="glow-orb o2"></div>
+
+  <!-- LEFT SIDE -->
+  <div class="left">
+    <div class="logo-row">
+      <div class="logo-icon">🎾</div>
+      <div>
+        <div class="logo-text">BANCOESTADO</div>
+        <div class="logo-sub">Ranking de Tenis</div>
+      </div>
+    </div>
+
+    <div class="eyebrow">Fin de temporada</div>
+
+    <h1>
+      CIERRE DE<br><em>TEMPORADA</em>
+      <span class="date">28 · NOV · 2026</span>
+    </h1>
+
+    <p class="subtitle">
+      Los premios se asignan según posición final del ranking y logros desbloqueados durante el semestre.
+    </p>
+
+    <div class="countdown">
+      <div class="cd-item">
+        <div class="cd-num" id="cd-weeks">24</div>
+        <div class="cd-lbl">Semanas</div>
+      </div>
+      <div class="cd-item">
+        <div class="cd-num" id="cd-sessions">~20</div>
+        <div class="cd-lbl">Sesiones</div>
+      </div>
+      <div class="cd-item">
+        <div class="cd-num">6</div>
+        <div class="cd-lbl">Jugadores</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="right">
+    <div class="section-label">Ranking — Premios por posición</div>
+    <div class="podium">
+      <div class="pod-row p1">
+        <div class="pod-rank r1">1</div>
+        <div class="pod-av">🏆</div>
+        <div class="pod-info">
+          <div class="pod-name">Campeón del Semestre</div>
+          <div class="pod-pts">🎁 Gift Card TD Deportes (vestimenta) +🏆 Trofeo Oro</div>
+        </div>
+        <div class="pod-medal">🥇</div>
+      </div>
+      <div class="pod-row p2">
+        <div class="pod-rank r2">2</div>
+        <div class="pod-av">🥈</div>
+        <div class="pod-info">
+          <div class="pod-name">Subcampeón</div>
+          <div class="pod-pts">🎁 Gift Card TD Deportes (vestimenta) +🥈 Trofeo Plata</div>
+        </div>
+        <div class="pod-medal">🥈</div>
+      </div>
+      <div class="pod-row p3">
+        <div class="pod-rank r3">3</div>
+        <div class="pod-av">🥉</div>
+        <div class="pod-info">
+          <div class="pod-name">Tercer Lugar</div>
+          <div class="pod-pts">Medalla Bronce + Reconocimiento #3</div>
+        </div>
+        <div class="pod-medal">🥉</div>
+      </div>
+    </div>
+
+    <div class="awards-section">
+      <div class="awards-label">Premios Especiales por Logros</div>
+      <div class="awards-row">
+        <div class="aw-card">
+          <div class="aw-icon">⚡</div>
+          <div class="aw-info"><div class="aw-name">Rey del STB</div><div class="aw-desc">Más victorias en Super Tiebreak</div></div>
+        </div>
+        <div class="aw-card">
+          <div class="aw-icon">🔥</div>
+          <div class="aw-info"><div class="aw-name">Hierro</div><div class="aw-desc">Más sábados de asistencia</div></div>
+        </div>
+        <div class="aw-card">
+          <div class="aw-icon">📈</div>
+          <div class="aw-info"><div class="aw-name">Mejora del Semestre</div><div class="aw-desc">Mayor crecimiento de puntos</div></div>
+        </div>
+        <div class="aw-card">
+          <div class="aw-icon">💥</div>
+          <div class="aw-info"><div class="aw-name">Rey del Upset</div><div class="aw-desc">Victorias ante mejor rankeados</div></div>
+        </div>
+        <div class="aw-card">
+          <div class="aw-icon">🤝</div>
+          <div class="aw-info"><div class="aw-name">Rey de Dobles</div><div class="aw-desc">Más victorias en dobles</div></div>
+        </div>
+        <div class="aw-card">
+          <div class="aw-icon">🏅</div>
+          <div class="aw-info"><div class="aw-name">+Logros</div><div class="aw-desc">Badges desbloqueados = premios</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-note">
+    <div class="fn-left">TEMPORADA 2 · 2026 · JUNIO — NOVIEMBRE</div>
+    <div class="fn-right">Ranking en vivo · tenis-ranking-ellano.vercel.app</div>
+  </div>
+</div>
+
+<script>
+const endDate = new Date('2026-11-28');
+const now = new Date('2026-06-08');
+const diffMs = endDate - now;
+const weeks = Math.ceil(diffMs / (1000*60*60*24*7));
+document.getElementById('cd-weeks').textContent = weeks;
+document.getElementById('cd-sessions').textContent = '~' + weeks;
+</script>
+</body>
+</html>
